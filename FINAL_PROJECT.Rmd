@@ -1,0 +1,91 @@
+---
+title: "Final Project"
+author: "Kiril Spiridonov"
+date: "7/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Getting the data
+
+```{r}
+training <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", na.strings = c("NA", "", " ", "#DIV/0!"))
+testing <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", na.strings = c("NA", "", " ", "#DIV/0!"))
+```
+
+## Splitting the data
+
+```{r}
+library(caret)
+inTrain <- createDataPartition(training$classe, p = 0.75, list = F)
+train_1 <- training[inTrain,]
+train_2 <- training[-inTrain,]
+dim(train_1); dim(train_2)
+
+```
+
+## Analysing the data
+
+```{r}
+#colSums(is.na(train_1))
+## Remove columns with more than 80% NA
+train_1 <- train_1[,-c(1:7)]
+testing <- testing[,-c(1:7)]
+train_1 <- train_1[, which(colMeans(!is.na(train_1)) > 0.8)]
+#train_2 <- train_2[, which(colMeans(!is.na(train_1)) > 0.8)]
+testing <- testing[, which(colMeans(!is.na(testing)) > 0.8)]
+
+```
+
+
+
+
+
+
+
+## Random Forest Prediction
+
+```{r}
+library(randomForest)
+#ranFfit <- train(classe ~ . , data = train_1, method = "rf", preProcess = "pca")
+rf <- randomForest(
+  classe ~ .,
+  data=train_1
+)
+prediction <- predict(rf, train_1)
+confusionMatrix(prediction, train_1$classe)
+
+
+
+
+```
+
+## Performing cross-validation
+
+```{r}
+testprediciton <- predict(rf, train_2)
+confusionMatrix(testprediciton, train_2$classe)
+
+
+```
+
+## Computing predicition
+
+```{r}
+#levels(testing$user_name) <- levels(train_1$user_name)
+#levels(testing$cvtd_timestamp) <- levels(train_1$cvtd_timestamp)
+#levels(testing$new_window) <- levels(train_1$new_window)
+
+
+#lapply(train_1, class) #used for information purposes
+#levels(test$SectionName) <- levels(train$SectionName) #error outcome
+validation <- predict(rf, testing)
+Prediction_dataset <- data.frame(Prediction = validation)
+
+Prediction_dataset
+
+```
+
